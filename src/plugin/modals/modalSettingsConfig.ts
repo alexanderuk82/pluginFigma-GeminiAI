@@ -1,5 +1,5 @@
 export const buttonConfig = `
- <div class="component-config" id="buttonConfig">
+    <div id="buttonConfig" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1E1E1E; z-index: 1000;">
         <div class="preview-panel">
             <button class="back-button" onclick="closeButtonConfig()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

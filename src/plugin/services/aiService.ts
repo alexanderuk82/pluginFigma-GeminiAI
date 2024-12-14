@@ -1,100 +1,120 @@
 // AI Service for handling API calls securely
+import { AIConfig } from '../config/aiConfig';
+
 export interface AIResponse {
     success: boolean;
     data?: any;
     error?: string;
 }
 
-// Configuration for the AI service
-const AI_CONFIG = {
-    PROXY_URL: 'https://api.gemini-proxy.onrender.com/api/generate',  // URL del servidor proxy
-    MAX_RETRIES: 3,
-    TIMEOUT: 30000, // 30 seconds
-};
-
 export class AIService {
-    private static async makeSecureRequest(prompt: string): Promise<AIResponse> {
+    static async generateComponent(prompt: string): Promise<any> {
         try {
-            console.log('Making request to proxy server with prompt:', prompt);
+            console.log(' Starting connection to Render Proxy...');
+            console.log(' Proxy URL:', AIConfig.PROXY_URL);
             
-            const response = await fetch(AI_CONFIG.PROXY_URL, {
+            const enhancedPrompt = `
+                Create a Figma component with EXACTLY this JSON structure:
+                {
+                    "type": "button",
+                    "text": "Click me",
+                    "size": "medium",
+                    "state": "default",
+                    "style": {
+                        "padding": {
+                            "top": 16,
+                            "right": 24,
+                            "bottom": 16,
+                            "left": 24
+                        },
+                        "cornerRadius": 8,
+                        "backgroundColor": {
+                            "r": 0.2,
+                            "g": 0.4,
+                            "b": 1
+                        },
+                        "textColor": {
+                            "r": 1,
+                            "g": 1,
+                            "b": 1
+                        },
+                        "fontSize": 16
+                    }
+                }
+
+                Rules:
+                1. Return ONLY the JSON object
+                2. No code blocks, no explanations
+                3. All color values must be numbers between 0-1
+                4. All measurements must be numbers
+                5. The structure must match EXACTLY
+
+                User request: ${prompt}
+            `;
+            
+            console.log(' Enhanced prompt created');
+            
+            const requestBody = {
+                contents: [{
+                    parts: [{
+                        text: enhancedPrompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 1000
+                }
+            };
+            
+            console.log(' Sending request to Render...');
+            
+            const response = await fetch(AIConfig.PROXY_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: prompt
-                        }]
-                    }]
-                })
+                body: JSON.stringify(requestBody),
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                console.error(' Render proxy error:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    errorText
+                });
+                throw new Error(`Request failed: ${response.status} ${response.statusText}`);
             }
 
-            const responseText = await response.text();
-            console.log('Raw Proxy Response:', responseText);
-
-            try {
-                const data = JSON.parse(responseText);
-                console.log('Parsed Proxy Response:', data);
-                
-                // Verificar si la respuesta contiene los datos esperados
-                if (data.candidates && data.candidates[0]?.content?.parts) {
-                    return {
-                        success: true,
-                        data: data
-                    };
-                } else {
-                    throw new Error('Invalid response format from AI service');
-                }
-            } catch (parseError) {
-                console.error('Error parsing proxy response:', parseError);
-                return {
-                    success: false,
-                    error: 'Invalid response from proxy service'
-                };
+            const data = await response.json();
+            console.log(' Render response received');
+            
+            if (!data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                throw new Error('Invalid response format from AI service');
             }
+
+            const responseText = data.candidates[0].content.parts[0].text.trim();
+            console.log(' Processing AI response');
+            
+            // Extract JSON object
+            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) {
+                throw new Error('No valid JSON found in response');
+            }
+            
+            const componentData = JSON.parse(jsonMatch[0]);
+            console.log(' Component data parsed successfully:', componentData);
+            
+            // Validate required fields
+            if (!componentData.type || !componentData.text || !componentData.style) {
+                throw new Error('Missing required fields in component data');
+            }
+            
+            return componentData;
+
         } catch (error) {
-            console.error('Proxy Service Error:', error);
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : 'Failed to generate component'
-            };
+            console.error(' Error in component generation:', error);
+            throw error;
         }
-    }
-
-    public static async generateComponent(prompt: string): Promise<AIResponse> {
-        console.log('Starting component generation with prompt:', prompt);
-        
-        let retries = 0;
-        while (retries < AI_CONFIG.MAX_RETRIES) {
-            try {
-                const response = await this.makeSecureRequest(prompt);
-                if (response.success) {
-                    return response;
-                }
-                retries++;
-                console.log(`Retry attempt ${retries}`);
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Esperar 1 segundo entre intentos
-            } catch (error) {
-                console.error(`Attempt ${retries + 1} failed:`, error);
-                if (retries === AI_CONFIG.MAX_RETRIES - 1) {
-                    return {
-                        success: false,
-                        error: 'Maximum retry attempts reached. Please try again later.'
-                    };
-                }
-                retries++;
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-        }
-        return {
-            success: false,
-            error: 'Service temporarily unavailable. Please try again later.'
-        };
     }
 }

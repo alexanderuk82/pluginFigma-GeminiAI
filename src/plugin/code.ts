@@ -6,6 +6,7 @@ import { buttonConfig } from "./modals/modalSettingsConfig";
 import { branding } from "./modals/branding";
 import { createButton } from "./components/button";
 import { AIService } from './services/aiService';
+import { generateUIComponent } from './services/componentGenerator';
 
 const html = `
 <!DOCTYPE html>
@@ -50,32 +51,28 @@ figma.showUI(html, {
 figma.ui.onmessage = async (msg: { type: string, config?: any, colors?: any, prompt?: string }) => {
     if (msg.type === 'create-button') {
         await createButton(msg);
-    } else if (msg.type === 'generate-component' && msg.prompt) {
+    } else if (msg.type === 'generate-component') {
         try {
-            console.log('Received generate-component request with prompt:', msg.prompt);
+            console.log('Received generate-component message:', msg.prompt);
             
-            // Realizar la llamada a la API desde el lado del plugin
-            const response = await AIService.generateComponent(msg.prompt);
-            console.log('AI Service Response:', response);
-
-            // Enviar el resultado de vuelta a la UI
-            figma.ui.postMessage({
+            // Generate component data using AI
+            const componentData = await AIService.generateComponent(msg.prompt || '');
+            console.log('Component data received:', componentData);
+            
+            // Generate the UI component in Figma
+            await generateUIComponent(componentData);
+            
+            // Notify UI of success
+            figma.ui.postMessage({ 
                 type: 'generation-complete',
-                success: response.success,
-                error: response.error,
-                data: response.success ? response.data : null
+                success: true 
             });
-
-            if (response.success && response.data) {
-                // Aquí procesaremos la respuesta para crear el componente
-                console.log('Successful AI Response:', JSON.stringify(response.data, null, 2));
-            }
+            
         } catch (error) {
-            console.error('Error in generate-component handler:', error);
-            figma.ui.postMessage({
-                type: 'generation-complete',
-                success: false,
-                error: 'An unexpected error occurred while generating the component'
+            console.error('Error in component generation:', error);
+            figma.ui.postMessage({ 
+                type: 'generation-error',
+                error: error.message 
             });
         }
     }

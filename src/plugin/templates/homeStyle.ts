@@ -169,4 +169,17 @@ export const homeStyle = `
         color: #991b1b;
         display: block;
     }
+
+    /* Component Config Modal */
+    #buttonConfig {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #1E1E1E;
+        z-index: 1000;
+        flex-direction: row;
+    }
 `;

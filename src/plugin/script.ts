@@ -1,10 +1,28 @@
 import { buttonScripts } from './components/buttonScript';
 import { brandingScripts } from './modals/brandingScripts';
 
+// Declaración global de tipos
+declare global {
+    interface Window {
+        createButton: () => void;
+        closeButtonConfig: () => void;
+        openAtomsModal: () => void;
+        closeAtomsModal: () => void;
+    }
+}
+
 export const script = `
 <script>
+        // Esperar a que el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            console.log('Atoms modal:', document.getElementById('atomsModal'));
+            console.log('Configuration modal:', document.getElementById('buttonConfig'));
+        });
+
         // Make generateComponent available globally
         window.generateComponent = async function() {
+            console.log('Starting component generation...');
             const promptElement = document.getElementById('ai-prompt');
             const generateButton = document.getElementById('generate-btn');
             const messageElement = document.getElementById('ai-message');
@@ -16,114 +34,131 @@ export const script = `
 
             const prompt = promptElement.value.trim();
             if (!prompt) {
-                messageElement.textContent = 'Por favor, ingresa una descripción del componente que deseas generar.';
+                messageElement.textContent = 'Please enter a component description.';
                 messageElement.className = 'message error';
                 return;
             }
 
             try {
+                console.log('Sending prompt:', prompt);
+                
                 // Update UI to loading state
                 generateButton.disabled = true;
-                const btnText = generateButton.querySelector('.btn-text');
-                const loadingText = generateButton.querySelector('.loading-text');
-                if (btnText) btnText.style.display = 'none';
-                if (loadingText) loadingText.style.display = 'inline';
-                messageElement.textContent = 'Generando componente...';
+                messageElement.textContent = 'Generating component...';
                 messageElement.className = 'message info';
 
-                // Send message to the plugin
+                // Send message to plugin
                 parent.postMessage({ 
                     pluginMessage: { 
                         type: 'generate-component',
                         prompt: prompt
-                    }
+                    } 
                 }, '*');
-
-                // Listen for the response
-                window.onmessage = (event) => {
-                    const message = event.data.pluginMessage;
-                    if (message && message.type === 'generation-complete') {
-                        // Reset UI state
-                        generateButton.disabled = false;
-                        if (btnText) btnText.style.display = 'inline';
-                        if (loadingText) loadingText.style.display = 'none';
-
-                        if (message.success) {
-                            messageElement.textContent = 'Componente generado exitosamente!';
-                            messageElement.className = 'message success';
-                            // Aquí podrías mostrar la respuesta en la UI si lo deseas
-                            console.log('Generation successful:', message.data);
-                        } else {
-                            messageElement.textContent = message.error || 'Error al generar el componente';
-                            messageElement.className = 'message error';
-                        }
-                    }
-                };
+                
+                console.log('Message sent to plugin');
             } catch (error) {
-                console.error('Error in generateComponent:', error);
-                messageElement.textContent = 'Error inesperado al generar el componente';
+                console.error('Error:', error);
+                messageElement.textContent = 'Error generating component: ' + error.message;
                 messageElement.className = 'message error';
                 generateButton.disabled = false;
-                if (btnText) btnText.style.display = 'inline';
-                if (loadingText) loadingText.style.display = 'none';
             }
         };
 
-        // Funciones para el modal de átomos
-        function openAtomsModal() {
-            console.log('Opening atoms modal...');
-            const modal = document.getElementById('atomsModal');
-            if (modal) {
-                modal.style.display = 'flex';
-                modal.querySelector('.modal').classList.add('show');
+        // Función para manejar la generación del botón
+        window.createButton = function() {
+            console.log('createButton llamado');
+            
+            const atomsModal = document.getElementById('atomsModal');
+            const configModal = document.getElementById('buttonConfig');
+            
+            console.log('atomsModal:', atomsModal);
+            console.log('configModal:', configModal);
+            
+            if (atomsModal) {
+                atomsModal.style.display = 'none';
+            }
+            
+            if (configModal) {
+                configModal.style.display = 'flex';
+                configModal.style.position = 'fixed';
+                configModal.style.top = '0';
+                configModal.style.left = '0';
+                configModal.style.width = '100%';
+                configModal.style.height = '100%';
+                configModal.style.zIndex = '1000';
+                console.log('Modal de configuración mostrado');
             } else {
-                console.error('Atoms modal not found');
+                console.error('No se encontró el modal de configuración');
             }
-        }
+        };
 
-        function closeAtomsModal() {
-            console.log('Closing atoms modal...');
-            const modal = document.getElementById('atomsModal');
-            if (modal) {
-                modal.style.display = 'none';
-                modal.querySelector('.modal').classList.remove('show');
+        window.closeButtonConfig = function() {
+            const configModal = document.getElementById('buttonConfig');
+            const atomsModal = document.getElementById('atomsModal');
+            
+            if (configModal) {
+                configModal.style.display = 'none';
             }
-        }
+            
+            if (atomsModal) {
+                atomsModal.style.display = 'flex';
+            }
+        };
 
-        function createButton() {
-            closeAtomsModal();
-            const config = document.getElementById('buttonConfig');
-            if (config) {
-                config.style.display = 'block';
+        // Funciones para el manejo de modales
+        window.openAtomsModal = () => {
+            const atomsModal = document.getElementById('atomsModal');
+            if (atomsModal) {
+                atomsModal.style.display = 'flex';
             }
-        }
+        };
+
+        window.closeAtomsModal = () => {
+            const atomsModal = document.getElementById('atomsModal');
+            if (atomsModal) {
+                atomsModal.style.display = 'none';
+            }
+        };
+
+        window.confirmBranding = () => {
+            const brandingModal = document.getElementById('brandingModal');
+            if (brandingModal) {
+                brandingModal.style.display = 'none';
+            }
+            window.openAtomsModal();
+        };
 
         // Listen for messages from the plugin
         window.onmessage = async (event) => {
             const message = event.data.pluginMessage;
             if (!message) return;
 
+            const messageElement = document.getElementById('ai-message');
+            const generateButton = document.getElementById('generate-btn');
+            
+            if (!messageElement || !generateButton) return;
+            
             if (message.type === 'generation-complete') {
-                const generateButton = document.getElementById('generate-btn');
-                const messageElement = document.getElementById('ai-message');
+                messageElement.textContent = 'Component generated successfully!';
+                messageElement.className = 'message success';
+                generateButton.disabled = false;
                 
-                if (generateButton && messageElement) {
-                    // Reset button state
-                    generateButton.disabled = false;
-                    const btnText = generateButton.querySelector('.btn-text');
-                    const loadingText = generateButton.querySelector('.loading-text');
-                    if (btnText) btnText.style.display = 'inline';
-                    if (loadingText) loadingText.style.display = 'none';
-
-                    // Show result message
-                    if (message.success) {
-                        messageElement.textContent = 'Component generated successfully!';
-                        messageElement.className = 'message success';
-                    } else {
-                        messageElement.textContent = message.error || 'Failed to generate component.';
-                        messageElement.className = 'message error';
-                    }
-                }
+                // Ocultar el mensaje después de 5 segundos
+                setTimeout(() => {
+                    messageElement.textContent = '';
+                    messageElement.className = 'message';
+                }, 5000);
+                
+            } else if (message.type === 'generation-error') {
+                messageElement.textContent = message.error || 'Error generating component';
+                messageElement.className = 'message error';
+                generateButton.disabled = false;
+                
+                // Ocultar el mensaje de error después de 5 segundos también
+                setTimeout(() => {
+                    messageElement.textContent = '';
+                    messageElement.className = 'message';
+                }, 5000);
             }
         };
 
