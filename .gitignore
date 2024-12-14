@@ -1,0 +1,4 @@
+/node_modules/
+/dist/
+/figma-proxy-server/
+manifest.json
