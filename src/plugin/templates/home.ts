@@ -61,7 +61,12 @@ export const home =`
                 ></textarea>
                 <button id="generate-btn" onclick="generateComponent()">
                     <span class="btn-text">Generate</span>
-                    <span class="loading-text" style="display: none;">Generating...</span>
+                    <span class="loading-text" style="display: none;">
+                        <svg class="spinner" width="16" height="16" viewBox="0 0 50 50">
+                            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+                        </svg>
+                        Generating...
+                    </span>
                 </button>
                 <div id="ai-message" class="message"></div>
             </div>

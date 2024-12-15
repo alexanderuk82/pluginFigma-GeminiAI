@@ -43,7 +43,12 @@ export const script = `
                 console.log('Sending prompt:', prompt);
                 
                 // Update UI to loading state
+                const btnText = generateButton.querySelector('.btn-text');
+                const loadingText = generateButton.querySelector('.loading-text');
+
                 generateButton.disabled = true;
+                btnText.style.display = 'none';
+                loadingText.style.display = 'inline';
                 messageElement.textContent = 'Generating component...';
                 messageElement.className = 'message info';
 
@@ -61,6 +66,10 @@ export const script = `
                 messageElement.textContent = 'Error generating component: ' + error.message;
                 messageElement.className = 'message error';
                 generateButton.disabled = false;
+                const btnText = generateButton.querySelector('.btn-text');
+                const loadingText = generateButton.querySelector('.loading-text');
+                btnText.style.display = 'inline';
+                loadingText.style.display = 'none';
             }
         };
 
@@ -135,30 +144,49 @@ export const script = `
 
             const messageElement = document.getElementById('ai-message');
             const generateButton = document.getElementById('generate-btn');
+            const promptElement = document.getElementById('ai-prompt');
+            const btnText = generateButton.querySelector('.btn-text');
+            const loadingText = generateButton.querySelector('.loading-text');
             
-            if (!messageElement || !generateButton) return;
+            if (!messageElement || !generateButton || !promptElement) return;
+
+            // Función para resetear la interfaz
+            const resetInterface = () => {
+                // Resetear el botón
+                generateButton.disabled = false;
+                btnText.style.display = 'inline';
+                loadingText.style.display = 'none';
+
+                // Limpiar el textarea
+                promptElement.value = '';
+
+                // Resetear el mensaje después de 3 segundos
+                setTimeout(() => {
+                    messageElement.textContent = '';
+                    messageElement.className = 'message';
+                }, 3000);
+            };
             
-            if (message.type === 'generation-complete') {
+            if (message.success) {
                 messageElement.textContent = 'Component generated successfully!';
                 messageElement.className = 'message success';
-                generateButton.disabled = false;
                 
-                // Ocultar el mensaje después de 5 segundos
-                setTimeout(() => {
-                    messageElement.textContent = '';
-                    messageElement.className = 'message';
-                }, 5000);
-                
-            } else if (message.type === 'generation-error') {
+                // Resetear la interfaz después del éxito
+                resetInterface();
+            } else {
                 messageElement.textContent = message.error || 'Error generating component';
                 messageElement.className = 'message error';
-                generateButton.disabled = false;
                 
-                // Ocultar el mensaje de error después de 5 segundos también
+                // En caso de error, también reseteamos pero mantenemos el texto del prompt
+                generateButton.disabled = false;
+                btnText.style.display = 'inline';
+                loadingText.style.display = 'none';
+                
+                // Limpiar mensaje de error después de 3 segundos
                 setTimeout(() => {
                     messageElement.textContent = '';
                     messageElement.className = 'message';
-                }, 5000);
+                }, 3000);
             }
         };
 
