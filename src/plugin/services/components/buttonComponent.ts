@@ -4,10 +4,11 @@ import { remToPixels } from '../utils/unitConversion';
 // Function to create button component
 export async function createButton(data: ComponentData): Promise<FrameNode> {
     try {
-        // Load required fonts
+        // Load required fonts first
         await Promise.all([
             figma.loadFontAsync({ family: "Inter", style: "Regular" }),
-            figma.loadFontAsync({ family: "Inter", style: "Medium" })
+            figma.loadFontAsync({ family: "Inter", style: "Medium" }),
+            figma.loadFontAsync({ family: "Inter", style: "Bold" })
         ]);
 
         // Create main button frame
@@ -18,7 +19,8 @@ export async function createButton(data: ComponentData): Promise<FrameNode> {
         buttonFrame.counterAxisAlignItems = "CENTER";
         buttonFrame.layoutAlign = "STRETCH";
         buttonFrame.fills = [];
-        buttonFrame.layoutSizingVertical = "HUG";
+        buttonFrame.counterAxisSizingMode = "AUTO";
+        buttonFrame.primaryAxisSizingMode = "AUTO";
 
         // Set padding
         buttonFrame.paddingTop = data.style.padding?.top || 12;
@@ -62,6 +64,7 @@ export async function createButton(data: ComponentData): Promise<FrameNode> {
         const textNode = figma.createText();
         textNode.characters = data.text || "Button";
         textNode.fontSize = data.style.fontSize || 16;
+        textNode.fontName = { family: "Inter", style: "Medium" };
         textNode.fills = [{
             type: 'SOLID',
             color: data.style.textColor || { r: 1, g: 1, b: 1 }

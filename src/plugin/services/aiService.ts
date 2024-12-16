@@ -14,7 +14,7 @@ export class AIService {
             
             const enhancedPrompt = `
                 Create a Figma component following these structures based on the component type.
-                Available component types: "input", "button", "text", "icon"
+                Available component types: "input", "button", "text", "icon", "form"
 
                 For BUTTON components:
                 {
@@ -98,16 +98,65 @@ export class AIService {
                     }
                 }
 
-                Notes for gradients:
-                1. Yellow (#BEAC53) = { "r": 0.745, "g": 0.647, "b": 0.325 }
-                2. Purple (#9333EA) = { "r": 0.576, "g": 0.2, "b": 0.917 }
-                3. Success Green = { "r": 0.34, "g": 0.84, "b": 0.42 }
-                4. All RGB values must be between 0-1 (divide hex by 255)
+                For FORM components (combines inputs and buttons):
+                {
+                    "type": "form",
+                    "style": {
+                        "padding": { "top": 12, "right": 16, "bottom": 12, "left": 16 },
+                        "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+                        "backgroundColor": { "r": 1, "g": 1, "b": 1 }
+                    },
+                    "title": {
+                        "text": "Sign In",
+                        "style": {
+                            "fontSize": 24,
+                            "textColor": { "r": 0.1, "g": 0.1, "b": 0.1 }
+                        }
+                    },
+                    "inputs": [
+                        {
+                            "type": "input",
+                            "label": "Email",
+                            "placeholder": "name@company.com",
+                            "caption": "Enter your work email",
+                            "style": {
+                                "padding": { "top": 12, "right": 16, "bottom": 12, "left": 16 },
+                                "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+                                "backgroundColor": { "r": 0.98, "g": 0.98, "b": 0.98 },
+                                "borderColor": { "r": 0.9, "g": 0.9, "b": 0.9 },
+                                "borderRadius": 8,
+                                "fontSize": 14,
+                                "textColor": { "r": 0.1, "g": 0.1, "b": 0.1 }
+                            }
+                        }
+                    ],
+                    "button": {
+                        "type": "button",
+                        "text": "Sign in",
+                        "style": {
+                            "padding": { "top": 12, "right": 24, "bottom": 12, "left": 24 },
+                            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+                            "fill": {
+                                "type": "gradient",
+                                "gradient": {
+                                    "angle": 45,
+                                    "stops": [
+                                        { "position": 0, "color": { "r": 0.145, "g": 0.388, "b": 0.922 } },
+                                        { "position": 1, "color": { "r": 0.310, "g": 0.275, "b": 0.898 } }
+                                    ]
+                                }
+                            },
+                            "borderRadius": 8,
+                            "fontSize": 16,
+                            "textColor": { "r": 1, "g": 1, "b": 1 }
+                        }
+                    }
+                }
 
-                Notes for colors:
-                1. Error Red (#FF4D4D) = { "r": 1, "g": 0.302, "b": 0.302 }
-                2. Success Green (#22C55E) = { "r": 0.133, "g": 0.773, "b": 0.369 }
-                3. Default Gray = { "r": 0.6, "g": 0.6, "b": 0.6 }
+                Color conversion notes:
+                - #F9FAFB (light gray) = { "r": 0.976, "g": 0.980, "b": 0.984 }
+                - #2563EB (blue) = { "r": 0.145, "g": 0.388, "b": 0.922 }
+                - #4F46E5 (indigo) = { "r": 0.310, "g": 0.275, "b": 0.898 }
 
                 Rules:
                 1. Return ONLY the JSON object
@@ -115,45 +164,13 @@ export class AIService {
                 3. All color values must be numbers between 0-1
                 4. All measurements must be numbers
                 5. The structure must match EXACTLY for the chosen component type
-                6. Choose the appropriate component type based on the user request
-                7. Modify values based on the user request but maintain the structure
-                8. Size options: "small", "medium", "large"
-                9. States: "default", "hover", "active", "disabled", "error"
-                10. Button variants: "primary", "secondary", "text", "outlined"
-                11. Fill types: "solid", "gradient"
-                12. For gradients, always include both gradient and solid fill fallback
+                6. ALL style objects must include ALL fields shown in the example
+                7. For forms, both inputs array and button object are REQUIRED
+                8. Each input MUST have type, label, placeholder, and complete style object
+                9. Button MUST have type, text, and complete style object
 
-                Rules for states:
-                1. Error state: use borderColor and error.color in red
-                2. Success state: use borderColor and success.color in green
-                3. Default state: use borderColor in gray
-                4. Caption shows above error/success message
-                5. Error/Success messages use their respective colors
-
-                Color Reference Guide:
-                Hex to RGB Conversion Examples:
-                - Forest Green (#2F855A): { "r": 0.18, "g": 0.52, "b": 0.35 }
-                - Sea Blue (#2B6CB0): { "r": 0.17, "g": 0.42, "b": 0.69 }
-                - Purple (#6B46C1): { "r": 0.42, "g": 0.27, "b": 0.76 }
-                - Electric Blue (#60A5FA): { "r": 0.38, "g": 0.65, "b": 0.98 }
-                - Coral (#FF6B6B): { "r": 1, "g": 0.42, "b": 0.42 }
-                - Warm Yellow (#FFB344): { "r": 1, "g": 0.70, "b": 0.27 }
-
-                Example of nature gradient:
-                  "gradient": {
-                    "type": "linear",
-                    "angle": 90,
-                    "stops": [
-                      { "position": 0, "color": { "r": 0.18, "g": 0.52, "b": 0.35 } },
-                      { "position": 1, "color": { "r": 0.17, "g": 0.42, "b": 0.69 } }
-                    ]
-                  }
-
-                Note: All hex colors must be converted to RGB values between 0-1
-                Example: #FF (255) becomes 1.0, #80 (128) becomes 0.5, #00 (0) becomes 0
-
-                User request: ${prompt}
-            `;
+                Based on this prompt: ${prompt}
+                Return a valid JSON object following the structure above.`;
             
             console.log('Sending request to AI service...');
             
@@ -199,90 +216,126 @@ export class AIService {
             const componentData = JSON.parse(jsonMatch[0]);
             console.log('Parsed component data:', componentData);
             
-            if (!componentData.type || !componentData.style) {
+            // Validate the component data
+            if (!componentData || !componentData.type) {
+                console.error('Invalid component data: Missing type');
                 throw new Error('Missing required fields in component data');
             }
 
-            // Base style defaults for all components
+            if (componentData.type === 'form') {
+                if (!componentData.inputs || !Array.isArray(componentData.inputs) || componentData.inputs.length === 0) {
+                    console.error('Invalid form data: Missing or empty inputs array');
+                    throw new Error('Missing required fields in component data');
+                }
+                if (!componentData.button || !componentData.button.type || !componentData.button.text) {
+                    console.error('Invalid form data: Missing or invalid button');
+                    throw new Error('Missing required fields in component data');
+                }
+                // Validate each input
+                componentData.inputs.forEach((input, index) => {
+                    if (!input.type || !input.style) {
+                        console.error(`Invalid input at index ${index}: Missing required fields`);
+                        throw new Error('Missing required fields in component data');
+                    }
+                });
+            }
+
+            // Default styles for different component types
             const baseStyle = {
-                padding: { top: 12, right: 24, bottom: 12, left: 24 },
+                padding: { top: 8, right: 12, bottom: 8, left: 12 },
                 margin: { top: 0, right: 0, bottom: 0, left: 0 },
-                cornerRadius: 8,
-                fill: {
-                    type: "solid",
-                    color: { r: 1, g: 1, b: 1 }
-                },
+                fontSize: 14,
                 textColor: { r: 0.1, g: 0.1, b: 0.1 },
-                borderColor: { r: 0.8, g: 0.8, b: 0.8 },
-                borderWidth: 1,
-                fontSize: 16
+                backgroundColor: { r: 1, g: 1, b: 1 },
+                borderColor: { r: 0.9, g: 0.9, b: 0.9 },
+                borderRadius: 8
             };
 
-            // Component-specific style defaults
             const styleDefaults = {
-                input: {
-                    ...baseStyle,
-                    error: {
-                        message: "",
-                        color: { r: 1, g: 0, b: 0 }
-                    }
-                },
                 button: {
                     ...baseStyle,
-                    hover: {
+                    text: "",
+                    style: {
+                        padding: { top: 12, right: 24, bottom: 12, left: 24 },
                         fill: {
                             type: "solid",
-                            color: { r: 0.3, g: 0.5, b: 1 }
-                        }
-                    },
-                    active: {
-                        fill: {
-                            type: "solid",
-                            color: { r: 0.1, g: 0.3, "b": 0.9 }
-                        }
-                    },
-                    disabled: {
-                        fill: {
-                            type: "solid",
-                            color: { r: 0.9, g: 0.9, b: 0.9 }
+                            color: { r: 0.145, g: 0.388, b: 0.922 }
                         },
-                        textColor: { r: 0.6, g: 0.6, b: 0.6 }
+                        textColor: { r: 1, g: 1, b: 1 },
+                        fontSize: 16,
+                        borderRadius: 8
+                    }
+                },
+                input: {
+                    ...baseStyle,
+                    label: "",
+                    placeholder: "",
+                    style: {
+                        padding: { top: 12, right: 16, bottom: 12, left: 16 },
+                        backgroundColor: { r: 0.98, g: 0.98, b: 0.98 },
+                        borderColor: { r: 0.9, g: 0.9, b: 0.9 },
+                        fontSize: 14,
+                        borderRadius: 8
+                    }
+                },
+                form: {
+                    type: "form",
+                    inputs: [],
+                    button: {
+                        type: "button",
+                        text: "",
+                        style: {
+                            padding: { top: 12, right: 24, bottom: 12, left: 24 },
+                            fill: {
+                                type: "solid",
+                                color: { r: 0.145, g: 0.388, b: 0.922 }
+                            },
+                            textColor: { r: 1, g: 1, b: 1 },
+                            fontSize: 16,
+                            borderRadius: 8
+                        }
+                    },
+                    style: {
+                        ...baseStyle
                     }
                 }
             };
 
             // Merge component-specific defaults with AI response
             const defaultStyle = styleDefaults[componentData.type] || baseStyle;
-            componentData.style = {
-                ...defaultStyle,
-                ...componentData.style,
-                // Deep merge for nested objects
-                padding: { ...defaultStyle.padding, ...componentData.style?.padding },
-                margin: { ...defaultStyle.margin, ...componentData.style?.margin },
-                fill: { ...defaultStyle.fill, ...componentData.style?.fill },
-                textColor: { ...defaultStyle.textColor, ...componentData.style?.textColor },
-                borderColor: { ...defaultStyle.borderColor, ...componentData.style?.borderColor }
-            };
+            
+            if (componentData.type === 'form') {
+                // Ensure each input has required fields and styles
+                componentData.inputs = (componentData.inputs || []).map(input => ({
+                    type: "input",
+                    ...styleDefaults.input,
+                    ...input,
+                    style: {
+                        ...styleDefaults.input.style,
+                        ...input.style
+                    }
+                }));
 
-            // Add component-specific nested styles
-            if (componentData.type === 'button') {
-                componentData.style.hover = { 
-                    ...defaultStyle.hover, 
-                    ...componentData.style?.hover,
-                    fill: { ...defaultStyle.hover.fill, ...componentData.style?.hover?.fill }
+                // Ensure button has required fields and styles
+                componentData.button = {
+                    type: "button",
+                    ...styleDefaults.button,
+                    ...componentData.button,
+                    style: {
+                        ...styleDefaults.button.style,
+                        ...componentData.button?.style
+                    }
                 };
-                componentData.style.active = { 
-                    ...defaultStyle.active, 
-                    ...componentData.style?.active,
-                    fill: { ...defaultStyle.active.fill, ...componentData.style?.active?.fill }
+
+                componentData.style = {
+                    ...baseStyle,
+                    ...componentData.style
                 };
-                componentData.style.disabled = { 
-                    ...defaultStyle.disabled, 
-                    ...componentData.style?.disabled,
-                    fill: { ...defaultStyle.disabled.fill, ...componentData.style?.disabled?.fill }
+            } else {
+                componentData.style = {
+                    ...defaultStyle,
+                    ...componentData.style
                 };
-            } else if (componentData.type === 'input') {
-                componentData.style.error = { ...defaultStyle.error, ...componentData.style?.error };
             }
             
             return componentData;

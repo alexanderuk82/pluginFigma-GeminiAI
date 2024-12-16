@@ -7,7 +7,8 @@ export async function createInput(data: ComponentData): Promise<FrameNode> {
         // First, load all required fonts
         await Promise.all([
             figma.loadFontAsync({ family: "Inter", style: "Regular" }),
-            figma.loadFontAsync({ family: "Inter", style: "Medium" })
+            figma.loadFontAsync({ family: "Inter", style: "Medium" }),
+            figma.loadFontAsync({ family: "Inter", style: "Bold" })
         ]);
 
         const mainFrame = figma.createFrame();
@@ -24,6 +25,7 @@ export async function createInput(data: ComponentData): Promise<FrameNode> {
             const label = figma.createText();
             label.characters = data.label;
             label.fontSize = data.style.fontSize || 14;
+            label.fontName = { family: "Inter", style: "Medium" };
             label.fills = [{
                 type: 'SOLID',
                 color: data.style.textColor || { r: 0.1, g: 0.1, b: 0.1 }
@@ -40,10 +42,10 @@ export async function createInput(data: ComponentData): Promise<FrameNode> {
         inputFrame.layoutAlign = "STRETCH";
         
         // Set padding
-        inputFrame.paddingTop = data.style.padding?.top || 16;
-        inputFrame.paddingRight = data.style.padding?.right || 24;
-        inputFrame.paddingBottom = data.style.padding?.bottom || 16;
-        inputFrame.paddingLeft = data.style.padding?.left || 24;
+        inputFrame.paddingTop = data.style.padding?.top || 12;
+        inputFrame.paddingRight = data.style.padding?.right || 16;
+        inputFrame.paddingBottom = data.style.padding?.bottom || 12;
+        inputFrame.paddingLeft = data.style.padding?.left || 16;
         
         // Set corner radius based on style description
         const cornerStyle = data.style.cornerStyle || 'default';
@@ -108,6 +110,7 @@ export async function createInput(data: ComponentData): Promise<FrameNode> {
             const placeholder = figma.createText();
             placeholder.characters = data.placeholder;
             placeholder.fontSize = data.style.fontSize || 14;
+            placeholder.fontName = { family: "Inter", style: "Regular" };
             placeholder.fills = [{
                 type: 'SOLID',
                 color: { r: 0.6, g: 0.6, b: 0.6 }
@@ -122,6 +125,7 @@ export async function createInput(data: ComponentData): Promise<FrameNode> {
             const messageNode = figma.createText();
             messageNode.characters = data.stateMessage;
             messageNode.fontSize = (data.style.fontSize || 14) - 2;
+            messageNode.fontName = { family: "Inter", style: "Regular" };
             messageNode.fills = [{
                 type: 'SOLID',
                 color: data.state === 'error'
@@ -135,6 +139,7 @@ export async function createInput(data: ComponentData): Promise<FrameNode> {
             const captionNode = figma.createText();
             captionNode.characters = data.caption;
             captionNode.fontSize = (data.style.fontSize || 14) - 2;
+            captionNode.fontName = { family: "Inter", style: "Regular" };
             captionNode.fills = [{
                 type: 'SOLID',
                 color: { r: 0.4, g: 0.4, b: 0.4 }

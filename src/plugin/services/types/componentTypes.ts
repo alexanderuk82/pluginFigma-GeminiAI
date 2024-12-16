@@ -7,7 +7,9 @@ export interface ComponentData {
     caption?: string;
     state?: 'default' | 'error' | 'success';
     stateMessage?: string;
-    style: {
+    inputs?: ComponentData[];
+    button?: ComponentData;
+    style?: {
         padding?: {
             top: number;
             right: number;
@@ -51,4 +53,16 @@ export interface ComponentData {
         textAlign?: 'left' | 'center' | 'right';
     };
     variant?: 'primary' | 'secondary' | 'text' | 'outlined';
+    title?: {
+        text: string;
+        style?: {
+            fontSize?: number;
+            fontWeight?: number;
+            textColor?: {
+                r: number;
+                g: number;
+                b: number;
+            };
+        }
+    };
 }
